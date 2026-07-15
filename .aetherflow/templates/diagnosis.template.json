@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "status": "hypothesis",
+  "failure_stage": "",
+  "suspects": [],
+  "evidence": [],
+  "must_read_before_patch": [],
+  "confidence": "low",
+  "notes": ""
+}
+

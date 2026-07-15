@@ -1,0 +1,41 @@
+name: build
+
+# "It compiles + unit tests" CI for the core AetherFlow pipeline. NVENC and the
+# ONNX-Runtime scene classifier are gitignored for licensing, so CMake
+# auto-disables them on a clean checkout — this validates the capture +
+# scene-first + deterministic-mask + vendored-oneVPL build, and runs the
+# first-party unit tests.
+#
+# Build via the MSVC toolchain + Ninja (NOT the "Visual Studio" CMake generator):
+# the VS generator's instance detection is unreliable on hosted runners
+# ("could not find any instance of Visual Studio"), whereas msvc-dev-cmd puts
+# cl.exe on PATH and Ninja drives it directly.
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up MSVC (x64)
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Configure (CMake + Ninja, Release)
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build (app + unit tests)
+        run: cmake --build build
+
+      - name: Confirm app artifact
+        run: if (Test-Path build/AetherFlow.exe) { "AetherFlow.exe built." } else { throw "AetherFlow.exe missing" }
+
+      - name: Unit tests (CTest)
+        run: ctest --test-dir build --output-on-failure

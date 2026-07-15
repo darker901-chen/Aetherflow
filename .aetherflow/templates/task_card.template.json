@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "goal": "",
+  "autonomy_level": "",
+  "architecture_plan": {
+    "required": true,
+    "approved": false,
+    "approval_evidence": "",
+    "planned_agents": [],
+    "planned_skills": [],
+    "planned_tools": []
+  },
+  "failure_command": "",
+  "allowed_paths": [],
+  "blocked_paths": [
+    "third_party/",
+    "build/",
+    "output/",
+    ".claude/worktrees/",
+    ".aetherflow/runs/"
+  ],
+  "must_read_before_patch": [],
+  "evidence": [],
+  "success_gates": [
+    "build",
+    "smoke",
+    "trace"
+  ],
+  "max_fix_iterations": 3
+}

@@ -1,0 +1,47 @@
+build/
+output/
+build_mingw/
+build_mingw_nv/
+build_ninja/
+build_vs2022/
+build_vs2022_nv/
+.vscode
+.aetherflow/runs/
+.aetherflow/audit/
+scene_test_out/
+models/*.onnx
+# ONNX Runtime is vendored from the Microsoft.ML.OnnxRuntime.DirectML NuGet.
+# Keep binary payload out of the repo; the SOP to recreate it is in
+# third_party/onnxruntime/SOURCE.md.
+third_party/onnxruntime/include/
+third_party/onnxruntime/lib/
+third_party/onnxruntime/bin/
+# FFmpeg shared SDK is vendored from a pinned BtbN autobuild for the SRT
+# output stage. Binary payload stays out of the repo; the SOP to recreate it
+# is in third_party/ffmpeg/SOURCE.md (python tools/fetch_ffmpeg.py).
+third_party/ffmpeg/include/
+third_party/ffmpeg/lib/
+third_party/ffmpeg/bin/
+third_party/ffmpeg/VERSION.json
+third_party/ffmpeg/_download.zip
+# Dear ImGui is vendored from a pinned release for the AetherFlowStudio UI.
+# SOP in third_party/imgui/SOURCE.md (python tools/fetch_imgui.py).
+third_party/imgui/*
+!third_party/imgui/SOURCE.md
+# Studio persisted settings (per-machine) + ImGui layout litter
+aetherflow_studio.ini
+imgui.ini
+# NVIDIA Video Codec SDK header is under NVIDIA's SDK license; not redistributed.
+# Fetch it yourself — SOP in external/VideoCodecSDK/SOURCE.md.
+external/VideoCodecSDK/Interface/
+__pycache__/
+*.pyc
+.claude/worktrees/
+.claude/settings.local.json
+# Local study notes and internal process logs. Keep outside the public repo.
+/private-docs-zh/
+# Local-only reorg archive (retired / uncertain files; reviewable + revertible, not pushed).
+_archive/
+CMakeLists.zip
+.DS_Store
+**/.DS_Store
