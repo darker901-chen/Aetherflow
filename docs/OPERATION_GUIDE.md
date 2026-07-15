@@ -1,9 +1,11 @@
 # AetherFlow — Operation Guide
 
 The detailed operation manual: every feature in depth, all flags and env vars,
-human-verification SOPs, the full macOS setup, and the ONNX Runtime install. For
-the 30-second pitch and quick start, see [README.md](../README.md); for the
-strict runtime design see [ARCHITECTURE.md](3-product/ARCHITECTURE.md).
+human-verification SOPs, the full macOS setup, and the optional ONNX Runtime
+install. For a deterministic fresh-clone Windows build, start with
+[BUILD_WINDOWS.md](BUILD_WINDOWS.md). For the 30-second pitch and quick start,
+see [README.md](../README.md); for the strict runtime design see
+[ARCHITECTURE.md](3-product/ARCHITECTURE.md).
 
 > Plain-language "what each feature does and which command to run." Verified
 > against `src/main.cpp` and `include/AetherFlow/SceneDemoActionModule.h`
@@ -82,7 +84,8 @@ already applied, since masking happens before encode — as MPEG-TS over an SRT
 listener, so any device on the same LAN can watch live. Video-only, one viewer
 at a time (v1); when the viewer disconnects, AetherFlow returns to listening.
 
-One-time setup (the FFmpeg SDK is gitignored, like ONNX Runtime):
+The default Windows bootstrap already performs this setup. For a manual build,
+the FFmpeg SDK is gitignored and can be fetched independently:
 
 ```bash
 # Run from the repository root.
@@ -164,8 +167,9 @@ Correct behavior and common wrong outcomes:
 ## Studio UI (settings window, zero command line)
 
 `AetherFlowStudio.exe` is the same pipeline as `AetherFlow.exe` behind a
-settings window — no command-line arguments needed at all. One-time setup for
-a source build (the packaged zip already includes everything):
+settings window — no command-line arguments needed at all. The default Windows
+bootstrap builds and smoke-tests it. For a manual source build (the packaged
+zip already includes everything):
 
 ```bash
 # Run from the repository root.

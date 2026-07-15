@@ -97,16 +97,34 @@ gate fails -> independent Code Review when code changed -> docs/status sync
 
 - Windows 10 1903+ / Windows 11
 - Intel Gen 6 Skylake+ or NVIDIA Maxwell+ GPU
-- Visual Studio 2019/2022, CMake 3.20+
+- Visual Studio or Build Tools 2019/2022 with **Desktop development with C++** and a Windows SDK
+- CMake 3.20+; Python 3 for the default Studio dependency bootstrap
 
 See [docs/3-product/ARCHITECTURE.md](docs/3-product/ARCHITECTURE.md) for the full runtime design.
 
 ## Quick Start (Windows)
 
+The recommended path builds the settings UI, SRT streaming support, first-party
+tests, and the deterministic privacy-mask pipeline. It deliberately leaves the
+large optional ONNX classifier disabled.
+
+```powershell
+# Run from the repository root in PowerShell.
+Set-ExecutionPolicy -Scope Process Bypass -Force
+.\tools\bootstrap_windows.ps1
+
+# Start the settings-window product after the bootstrap passes.
+.\build\Release\AetherFlowStudio.exe
+```
+
+For prerequisites, a Core-only profile, NVENC setup, exact success criteria,
+common failures, and the coding-agent contract, read
+**[Build AetherFlow from a Fresh Windows Clone](docs/BUILD_WINDOWS.md)**.
+
 For macOS, see the [Operation Guide § macOS](docs/OPERATION_GUIDE.md#macos).
 
 ```bash
-# Build (VS 2022 shown; for VS 2019 use -G "Visual Studio 16 2019")
+# Manual core build (VS 2022 shown; for VS 2019 use -G "Visual Studio 16 2019")
 cmake -S . -B build -G "Visual Studio 17 2022" -A x64
 cmake --build build --config Release --target AetherFlow
 
@@ -131,7 +149,7 @@ cmake --build build --config Release --target AetherFlow
 ./build/Release/AetherFlow.exe --srt-output    # prints srt://<your-LAN-IP>:8888 to paste into VLC/ffplay
 
 # Settings-window version of the same pipeline — zero command line
-# (one-time `python tools/fetch_imgui.py` + reconfigure; see Operation Guide):
+# (the default bootstrap fetches ImGui and FFmpeg/SRT):
 ./build/Release/AetherFlowStudio.exe
 
 # Portable zip for another machine (exes + all runtime DLLs + README):
@@ -147,18 +165,11 @@ Outputs land in `output/`: NVENC `output_encoded.h264` (disable with
 set `AETHERFLOW_OUTPUT_DIR` to `<repo>/output` and mux `output/demo.mp4` via
 ffmpeg if it is on PATH.
 
-> **Fresh clone:** capture + deterministic privacy masks + the **oneVPL** backend
-> build out of the box (oneVPL is vendored). Running that backend still requires
-> a supported Intel GPU/driver; an NVIDIA-only machine must fetch the NVENC
-> header before it has a usable NVIDIA encoder path. Three optional components
-> need a one-time fetch first (all gitignored for licensing): **NVENC** — one NVIDIA SDK
-> header, see [external/VideoCodecSDK/SOURCE.md](external/VideoCodecSDK/SOURCE.md);
-> the **AI scene classifier** (ONNX Runtime + model), see the
-> [Operation Guide](docs/OPERATION_GUIDE.md); and **SRT live streaming** — the
-> FFmpeg SDK via `python tools/fetch_ffmpeg.py`, see
-> [third_party/ffmpeg/SOURCE.md](third_party/ffmpeg/SOURCE.md). Without any of
-> them, CMake auto-disables that piece and the build still succeeds;
-> `run_full_test.sh` runs fine regardless.
+> **Fresh-clone boundary:** the bootstrap fetches only the pinned ImGui and
+> FFmpeg/SRT packages needed for the showcased Studio path. oneVPL is already
+> vendored. NVENC still needs one NVIDIA SDK header supplied by the user; ONNX
+> Runtime and the model remain manual, optional, and advisory. Build success
+> does not by itself prove that the machine has a supported encoder GPU/driver.
 
 > Full flag/env reference, timed recording, visual modes, run-folder anatomy,
 > and verify-vs-benchmark → **[Operation Guide](docs/OPERATION_GUIDE.md)**.

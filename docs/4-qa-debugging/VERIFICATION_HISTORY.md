@@ -4,6 +4,22 @@ This file preserves dated verification and implementation evidence. It is histor
 
 ## Dated Evidence Log
 
+> **2026-07-15 — fresh-clone Windows bootstrap and public build SOP verified.**
+> `tools/bootstrap_windows.ps1` now provides the canonical PowerShell entrypoint
+> for Core or Studio source builds. The default Studio profile invokes the
+> pinned ImGui and LGPL FFmpeg fetchers, explicitly disables the optional ONNX
+> scene classifier, configures a fresh VS 2022 x64 build, builds the CLI, Studio,
+> and four first-party tests, then runs CTest and `AetherFlowStudio.exe
+> --ui-smoke`. Evidence in
+> `.aetherflow/runs/build_onboarding_sop_20260715/verification.md`: default
+> profile exit 0, CTest **4/4**, UI smoke exit 0; a separate fresh Core profile
+> built only `AetherFlow` with SRT and ONNX explicitly disabled. The privacy
+> product boundary remains deterministic UI Automation password-field and
+> application-window detection; ONNX is manual, optional, and advisory. The
+> fetchers were exercised against already-present pinned payloads, so a cold
+> network redownload was not repeated in this run. No runtime, encoder, mask,
+> trace, or streaming behavior changed.
+
 > **2026-07-14 — English public-documentation and status-surface cleanup.**
 > All tracked first-party documentation and agent configuration is English.
 > The public status snapshot was separated from dated verification history;

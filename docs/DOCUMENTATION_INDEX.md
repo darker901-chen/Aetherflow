@@ -12,7 +12,7 @@ status, commands, or architecture claims.
 | Agent system | `docs/2-agent-system/` | How development agents plan, implement, verify, review, repair, and hand off evidence | [AGENT_ARCHITECTURE.md](2-agent-system/AGENT_ARCHITECTURE.md) | [AGENT_EFFECTIVENESS_LOG.md](2-agent-system/AGENT_EFFECTIVENESS_LOG.md), [AGENT_PROTOCOL.md](../protocol/AGENT_PROTOCOL.md), [AGENT_COMMANDS.md](../protocol/AGENT_COMMANDS.md) |
 | Product architecture | `docs/3-product/` | Runtime, encoder, scene, privacy-mask, platform, and product design | [ARCHITECTURE.md](3-product/ARCHITECTURE.md) | [CODE_COMPONENT_SUMMARY.md](3-product/CODE_COMPONENT_SUMMARY.md), [PRODUCT_ROADMAP.md](3-product/PRODUCT_ROADMAP.md), [MACOS_AGENT_VERIFICATION.md](3-product/MACOS_AGENT_VERIFICATION.md), [DESIGN_DECISIONS.md](../DESIGN_DECISIONS.md) |
 | QA and debugging | `docs/4-qa-debugging/` | Current QA coverage, unverified paths, historical evidence, and root-caused investigations | [TROUBLESHOOTING_QA.md](4-qa-debugging/TROUBLESHOOTING_QA.md) | [VERIFICATION_HISTORY.md](4-qa-debugging/VERIFICATION_HISTORY.md), [JUDDER_INVESTIGATION.md](4-qa-debugging/JUDDER_INVESTIGATION.md) |
-| Operations | repository root and `docs/` | Setup, flags, environment variables, outputs, and manual validation | [README.md](../README.md) | [OPERATION_GUIDE.md](OPERATION_GUIDE.md), [HIGHLIGHTS.md](HIGHLIGHTS.md) |
+| Operations | repository root and `docs/` | Setup, flags, environment variables, outputs, and manual validation | [README.md](../README.md) | [BUILD_WINDOWS.md](BUILD_WINDOWS.md), [OPERATION_GUIDE.md](OPERATION_GUIDE.md), [HIGHLIGHTS.md](HIGHLIGHTS.md) |
 
 ## Recommended Reading Orders
 
@@ -39,9 +39,10 @@ status, commands, or architecture claims.
 ### Operator
 
 1. [README.md](../README.md)
-2. [OPERATION_GUIDE.md](OPERATION_GUIDE.md)
-3. [PROJECT_STATUS.md](1-status/PROJECT_STATUS.md) for current limitations
-4. [TROUBLESHOOTING_QA.md](4-qa-debugging/TROUBLESHOOTING_QA.md) when a known
+2. [BUILD_WINDOWS.md](BUILD_WINDOWS.md) for a fresh Windows source build
+3. [OPERATION_GUIDE.md](OPERATION_GUIDE.md)
+4. [PROJECT_STATUS.md](1-status/PROJECT_STATUS.md) for current limitations
+5. [TROUBLESHOOTING_QA.md](4-qa-debugging/TROUBLESHOOTING_QA.md) when a known
    failure pattern appears
 
 ## Canonical Ownership
@@ -57,7 +58,8 @@ status, commands, or architecture claims.
 | How do development agents cooperate? | [AGENT_ARCHITECTURE.md](2-agent-system/AGENT_ARCHITECTURE.md) | Protocol details remain in `protocol/`; adapters must not fork the rules. |
 | Did the agent workflow catch anything real? | [AGENT_EFFECTIVENESS_LOG.md](2-agent-system/AGENT_EFFECTIVENESS_LOG.md) | Record only attributable catches, repairs, or measurements; omit routine green runs. |
 | Which paths are tested or still unverified? | [TROUBLESHOOTING_QA.md](4-qa-debugging/TROUBLESHOOTING_QA.md) | A passed path must name its platform/backend/condition boundary. |
-| How do I build and run it? | [README.md](../README.md), then [OPERATION_GUIDE.md](OPERATION_GUIDE.md) | Commands, paths, defaults, and shell syntax must come from source or verified artifacts. |
+| How do I build it from a fresh Windows clone? | [BUILD_WINDOWS.md](BUILD_WINDOWS.md) | Keep the bootstrap, prerequisites, dependency policy, and success criteria aligned. |
+| How do I run and operate it? | [README.md](../README.md), then [OPERATION_GUIDE.md](OPERATION_GUIDE.md) | Commands, paths, defaults, and shell syntax must come from source or verified artifacts. |
 
 ## Update Rules
 
@@ -81,7 +83,8 @@ status, commands, or architecture claims.
 ## Quick Router
 
 - Current state or release readiness: `docs/1-status/PROJECT_STATUS.md`
-- Setup or flags: `README.md`, then `docs/OPERATION_GUIDE.md`
+- Fresh Windows build: `docs/BUILD_WINDOWS.md`
+- Setup or runtime flags: `README.md`, then `docs/OPERATION_GUIDE.md`
 - Product architecture: `docs/3-product/ARCHITECTURE.md`
 - File ownership: `protocol/COMPONENT_INDEX.md`
 - Agent workflow: `docs/2-agent-system/AGENT_ARCHITECTURE.md`
