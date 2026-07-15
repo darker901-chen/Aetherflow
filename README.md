@@ -19,6 +19,12 @@ LLM in the runtime.
   in `VERIFICATION_HISTORY.md`, and agent-workflow catches live in the
   effectiveness log.
 
+![AetherFlow Studio settings for deterministic privacy masks and SRT streaming](docs/assets/aetherflow-studio-ui.png)
+
+*AetherFlow Studio: deterministic UI Automation password-field and recognized
+messenger-window masks are applied before encoding; SRT streams the already-masked
+output. The ONNX scene classifier is optional and advisory.*
+
 The load-bearing engineering is threefold: **(i)** the self-built 7-role agent
 development protocol ([AGENT_ARCHITECTURE.md](docs/2-agent-system/AGENT_ARCHITECTURE.md)
 · [AGENT_EFFECTIVENESS_LOG.md](docs/2-agent-system/AGENT_EFFECTIVENESS_LOG.md)),
