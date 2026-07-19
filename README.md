@@ -124,10 +124,11 @@ Useful entry points:
 
 ```powershell
 .\demo.ps1
-.\run_full_test.ps1
 python tools\agent_run.py --run-id smoke
 python tools\agent_verify.py --run-dir .aetherflow\runs\smoke
 ```
+
+The full Bash-based runner remains available as `./run_full_test.sh`.
 
 Full setup, flags, packaging, SRT, ONNX, and macOS instructions live in
 [`docs/OPERATION_GUIDE.md`](docs/OPERATION_GUIDE.md) and
