@@ -1,69 +1,86 @@
-# AetherFlow — Highlights
+# AetherFlow — 60-Second Technical Skim
 
-A Windows-first, **GPU-resident fast-path** screen-capture → H.264 (NVIDIA NVENC / Intel oneVPL)
-pipeline with a **deterministic, scene-first privacy layer** that masks sensitive
-content (password fields, chat-app windows, notifications) **before** it is
-encoded — fully on-device, no cloud, no LLM in the runtime. First product wedge:
-**Live Share Guard**.
+## Project
 
-> The 60-second skim. For setup see [README](../README.md); for the full design
-> see [ARCHITECTURE](3-product/ARCHITECTURE.md); for the dev-agent workflow see
-> [AGENT_ARCHITECTURE](2-agent-system/AGENT_ARCHITECTURE.md).
+AetherFlow is an **author-directed, AI-assisted native real-time media systems
+portfolio project**. Its Windows path uses Windows Graphics Capture or DXGI,
+D3D11 GPU surfaces, scene-first frame decisions, pre-encode privacy masking,
+BGRA-to-NV12 conversion, and a shared NVIDIA NVENC / Intel oneVPL H.264
+boundary. Encoded access units can feed an optional video-only SRT output. A
+macOS path uses ScreenCaptureKit, CoreImage/Metal, VideoToolbox, and
+AVAssetWriter. The first product wedge is **Live Share Guard**.
 
-## In 30 seconds
+It is a pre-release masking prototype, not a certified DLP product or turnkey
+consumer release.
 
-AetherFlow captures the screen, keeps every frame GPU-resident, makes a
-**scene-first** decision per frame, applies deterministic privacy masks **before**
-encode, and encodes through NVENC or Intel oneVPL. AI is allowed only on a
-droppable ~1 Hz slow path; the media fast path stays deterministic, measurable,
-and fallback-safe. The organizing principle: **a realtime system where AI can
-fail safely.**
+## Fast Path / Slow Path
 
-## Two lanes
+```text
+FAST — deterministic, per frame
+capture -> decide -> privacy mask -> convert -> hardware encode -> SRT / trace
 
-- **Fast lane** — deterministic, non-blocking, ~33 ms/frame budget: capture →
-  scene-first decision → pre-encode mask → NV12 convert → encode. Media surfaces
-  stay GPU-resident through mask, conversion, and hardware encode; deterministic
-  decision work does not block on the slow analyzer.
-- **Slow lane** — probabilistic, droppable, ~1 Hz, advisory: an on-device ONNX
-  scene classifier on its own thread, decoupled by the `AsyncAnalyzerBridge` seam.
-  Default product behavior uses it for trace and Studio status; it never gates
-  the encoder or product masks. An explicit opt-in, non-product demo can map the
-  stable class to a full-screen compositor preview.
+SLOW — sampled, droppable, advisory
+sampled pixels -> local ONNX analyzer -> cached scene -> status / trace
+```
 
-## What carries the weight
+The fast path never waits for a model, network service, or LLM. Local producers
+find password fields, selected application windows, manual regions, and panic
+state; masking happens before encode. Windows falls back to blackout when a
+non-blackout effect fails and aborts if the fail-closed path cannot complete.
+macOS instead skips a frame after an ultimate mask failure, so the semantics are
+not yet identical.
 
-1. **A self-built 7-role agent development workflow** — file-based artifacts,
-   verifier-gated evidence flow, autonomous detect → repair → re-verify, and a
-   cited [effectiveness log](2-agent-system/AGENT_EFFECTIVENESS_LOG.md).
-2. **Cross-platform native GPU media craft** — Windows WGC + D3D11 + NVENC /
-   Intel oneVPL; macOS ScreenCaptureKit + VideoToolbox + AVAssetWriter.
-3. **A deterministic scene-first runtime** — frame-level trace schema v3,
-   independent diff review, and a longitudinal audit ledger.
+The optional roughly 1 Hz ONNX path runs off-thread. It does not steer NVENC,
+oneVPL, or VideoToolbox; its opt-in full-screen effect is a demo, not product
+privacy behavior.
 
-## Measurable results
+## Engineering Signal
 
-> ⚠️ Point-in-time figures from specific recorded runs (sources below). Re-run to
-> confirm before quoting.
+- GPU-resident D3D11 mask, color-conversion, and encode stages.
+- Shared `IH264Encoder` abstraction with encoder-owned surfaces, asynchronous
+  drain, and an H.264 sink used by SRT.
+- Deterministic safety decisions outrank fallible advisory analysis.
+- Frame-level traces and verifier reports preserve timing, mask, capture, and
+  encode evidence instead of relying on screenshots or build success alone.
+- Native Windows and macOS media stacks behind platform-specific boundaries.
 
-| Metric | Value | Source |
+## Measurements
+
+> Point-in-time results from named runs; re-run before quoting as current.
+
+| Evidence | Result | Boundary |
 |---|---|---|
-| Current Windows default smoke | **120/120 encoded**, 0 encode failures, 0 parse errors | [Project status](1-status/PROJECT_STATUS.md); WGC retry warning disclosed there |
-| First-party unit tests | **CTest 4/4** | `public_release_hardening_20260714` |
-| `decisionMs` p99 with both deterministic producers enabled | **0.17 ms**, 0% ≥10 ms (historical interactive run) | [Verification history](4-qa-debugging/VERIFICATION_HISTORY.md), 2026-05-17 |
-| ONNX scene inference p95 (off-thread) | **15.254 ms** | `scene_classifier_onnx_smoke` |
-| macOS mask-stage `mask_ms` | mean **5.40 ms** / p99 **7.14 ms** (11 rectangles/frame) | `mac_chat_window_mosaic_masked` |
-| SRT live loopback | **90 frames decoded** by a local FFmpeg client | `srt_output_v1` |
+| Windows smoke, `public_release_hardening_20260714` | **120/120 encoded**, 0 encode failures/parse errors | 1007 WGC retries were warn-only; not clean capture-reliability proof. |
+| First-party tests | **CTest 4/4** | Selected behavior, not exhaustive coverage. |
+| Historical deterministic decision timing | p99 **0.17 ms** | CPU timing; both deterministic producers enabled. |
+| `scene_classifier_onnx_smoke` | p95 **15.254 ms** | Off-thread timing; accuracy unmeasured. |
+| `srt_output_v1` | **90 frames decoded** | Local NVENC/FFmpeg loopback; single viewer, no field-network or Intel proof. |
+| `mac_chat_window_mosaic_masked` | mean **5.40 ms**, p99 **7.14 ms** | Historical CPU dispatch timing with 11 rectangles/frame, not GPU completion. |
 
-Raw `.aetherflow/runs/` bundles are intentionally gitignored because traces and
-recordings may contain captured-screen-sensitive data. Public summaries remain
-in [PROJECT_STATUS.md](1-status/PROJECT_STATUS.md) and
-[VERIFICATION_HISTORY.md](4-qa-debugging/VERIFICATION_HISTORY.md); reproduce the
-figures locally before relying on them.
+## Honest Scope
 
-## Why it is designed this way
+- Windows/NVIDIA is the primary locally verified path. oneVPL is implemented
+  and build-covered but lacks a current Intel-hardware artifact.
+- Password and application-window evidence is fixture/application specific; it
+  does not prove universal detection.
+- macOS evidence is historical; secure-text detection is a stub and ROI/QP is
+  unsupported.
+- ONNX is optional and manually supplied; accuracy and encoder steering are
+  unproven. SRT is opt-in, video-only, and single-viewer.
+- There is no formal version, tag, current signed package, or GitHub Release.
 
-See [DESIGN_DECISIONS.md](../DESIGN_DECISIONS.md) — the non-obvious choices in the
-author's own words (e.g. DD-1: a mask failure never encodes the frame unmasked;
-macOS skips it, while Windows currently aborts the run pending alignment; DD-2:
-the runtime stays deterministic, the classifier is advisory).
+Current truth: [PROJECT_STATUS](1-status/PROJECT_STATUS.md) · full design:
+[ARCHITECTURE](3-product/ARCHITECTURE.md) · dated evidence:
+[VERIFICATION_HISTORY](4-qa-debugging/VERIFICATION_HISTORY.md).
+
+## Development Provenance
+
+This is **author-directed, AI-assisted engineering**. The author defined and
+directed the problem, architecture, constraints, acceptance criteria,
+verification gates, and review boundaries. AI coding agents produced much of
+the implementation and documentation; the project does not imply manual
+authorship of every line.
+
+The seven-role workflow is the development method, not the primary achievement:
+[AGENT_ARCHITECTURE](2-agent-system/AGENT_ARCHITECTURE.md). Setup and detailed
+operations: [README](../README.md) · [OPERATION_GUIDE](OPERATION_GUIDE.md).
