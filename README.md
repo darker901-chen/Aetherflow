@@ -89,11 +89,13 @@ coverage claims. Re-run the repository gates before quoting them as current.
 
 | Evidence | Result | Boundary |
 |---|---|---|
-| Windows default smoke, `public_release_hardening_20260714` | **120/120 encoded**, 0 encode failures, 0 trace parse errors | The same nearly static desktop produced 1007 WGC retries for 120 delivered frames; the verifier treats this as a warning, not clean capture-reliability proof. |
+| Windows default smoke, `evidence_refresh_20260723` | **900/900 encoded**, 0 encode failures, 0 trace parse errors | A near-static desktop logged a warn-only WGC retry ratio of 8.979; the same-day moving-content run `capture_motion_20260723` recorded **0 retries in 300 frames** — the ratio tracks content dynamics, not capture defects. |
 | First-party tests | **CTest 4/4** | Covers selected decision, policy, Annex-B, and settings behavior; it is not exhaustive system coverage. |
+| Live LINE window masking, `line_window_mask_live_20260723` | **199/200 frames masked** by the deterministic window producer | One real installed application on one host; Slack/Discord/Telegram/WhatsApp evidence is still fixture-level. |
+| Mask visual sweep, `mask_sweep_*_20260723` | blackout / blur / mosaic each masked **120/120 frames** through distinct GPU shader paths | Trace plus muxed mp4 evidence; CPU-dispatch timing only, and human visual confirmation is still pending. |
 | Deterministic decision time, historical 2026-05-17 interactive run | p99 **0.17 ms**, 0% at or above 10 ms | CPU-side decision timing with both deterministic producers enabled. |
-| ONNX scene inference, `scene_classifier_onnx_smoke` | p95 **15.254 ms** off-thread | Proves runtime plumbing and timing, not real-screen classification accuracy. |
-| SRT loopback, `srt_output_v1` | **90 frames decoded** by a local FFmpeg client | NVENC, local loopback, video-only, single viewer; Intel hardware and real LAN/loss conditions remain unverified. |
+| ONNX scene inference, `scene_classifier_onnx_20260723` | p95 **13.235 ms** off-thread, 4/4 gates passed | Proves runtime plumbing and timing, not real-screen classification accuracy. |
+| SRT loopback, `srt_loopback_refresh_20260723` | **90 frames decoded** by a local FFmpeg client, 0 queue-full drops | NVENC, local loopback, video-only, single viewer; Intel hardware and real LAN/loss conditions remain unverified. |
 | macOS mask stage, `mac_chat_window_mosaic_masked` | mean **5.40 ms**, p99 **7.14 ms** with 11 rectangles/frame | Historical run; `mask_ms` is CPU-side dispatch timing, not GPU-completion timing, and the current tree was not rerun on this Windows host. |
 
 ## Quick Start on Windows
@@ -137,11 +139,12 @@ The current release boundary is deliberately narrow:
   dated verification, but were not rerun on the current Windows host;
   secure-text detection remains a stub and ROI/QP is unsupported.
 - The classifier is optional and advisory; real-screen accuracy is unmeasured.
-- Blackout, blur, and mosaic are implemented product modes, but a current full
-  visual sweep is still missing.
-- No formal version, Git tag, or GitHub Release is claimed. The last portable
-  zip predates the current hardened tree, is unsigned, and is not a current
-  release artifact.
+- Blackout, blur, and mosaic are implemented product modes with current
+  per-mode trace and mp4 artifacts; uninterrupted human visual confirmation is
+  still pending.
+- No formal version, Git tag, or GitHub Release is claimed yet. A portable zip
+  rebuilt from the current tree (2026-07-23) passed its staged self-tests but
+  is unsigned and unpublished.
 - A successful build does not prove encoder hardware/driver availability, live
   application coverage, long-duration reliability, or field-ready SRT behavior.
 

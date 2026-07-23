@@ -50,11 +50,12 @@ privacy behavior.
 
 | Evidence | Result | Boundary |
 |---|---|---|
-| Windows smoke, `public_release_hardening_20260714` | **120/120 encoded**, 0 encode failures/parse errors | 1007 WGC retries were warn-only; not clean capture-reliability proof. |
+| Windows smoke, `evidence_refresh_20260723` | **900/900 encoded**, 0 encode failures/parse errors | Static-desktop WGC retry ratio 8.979 is warn-only; a same-day moving-content run logged **0/300 retries**. |
 | First-party tests | **CTest 4/4** | Selected behavior, not exhaustive coverage. |
+| `line_window_mask_live_20260723` | **199/200 frames masked** | A real installed LINE window; other messengers remain fixture-level. |
 | Historical deterministic decision timing | p99 **0.17 ms** | CPU timing; both deterministic producers enabled. |
-| `scene_classifier_onnx_smoke` | p95 **15.254 ms** | Off-thread timing; accuracy unmeasured. |
-| `srt_output_v1` | **90 frames decoded** | Local NVENC/FFmpeg loopback; single viewer, no field-network or Intel proof. |
+| `scene_classifier_onnx_20260723` | p95 **13.235 ms**, 4/4 gates | Off-thread timing; accuracy unmeasured. |
+| `srt_loopback_refresh_20260723` | **90 frames decoded** | Local NVENC/FFmpeg loopback; single viewer, no field-network or Intel proof. |
 | `mac_chat_window_mosaic_masked` | mean **5.40 ms**, p99 **7.14 ms** | Historical CPU dispatch timing with 11 rectangles/frame, not GPU completion. |
 
 ## Honest Scope
@@ -67,7 +68,9 @@ privacy behavior.
   unsupported.
 - ONNX is optional and manually supplied; accuracy and encoder steering are
   unproven. SRT is opt-in, video-only, and single-viewer.
-- There is no formal version, tag, current signed package, or GitHub Release.
+- There is no formal version, tag, signed package, or GitHub Release; a
+  current unsigned portable zip (2026-07-23) passed its staged self-tests but
+  is unpublished.
 
 Current truth: [PROJECT_STATUS](1-status/PROJECT_STATUS.md) · full design:
 [ARCHITECTURE](3-product/ARCHITECTURE.md) · dated evidence:

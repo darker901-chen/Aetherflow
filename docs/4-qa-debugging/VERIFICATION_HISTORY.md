@@ -4,6 +4,46 @@ This file preserves dated verification and implementation evidence. It is histor
 
 ## Dated Evidence Log
 
+> **2026-07-23 — current-HEAD evidence refresh VERIFIED across seven runs (sha
+> `0536d42`, Windows host, NVIDIA GTX 1660 + AMD iGPU).** The local build tree
+> first failed to reconfigure because the repository had moved from
+> `F:\Aetherflow` to `F:\Project\Aetherflow` and the stale `build/CMakeCache.txt`
+> still pointed at the old source path; the build directory was wiped and
+> reconfigured (VS 2022 x64; tests, SRT, NVENC, and the scene classifier ON,
+> matching the prior local profile). Hosted CI was unaffected. All seven
+> `verify_report.json` files **passed**. `evidence_refresh_20260723`: default
+> 900-frame smoke, **900/900 encoded**, 0 encode failures, 0 parse errors, ROI
+> benchmark exit 0, CTest **4/4**; the near-static desktop reproduced the
+> warn-only capture-retry ratio (8081/900 = 8.979). `capture_motion_20260723`:
+> the same build with a visible rapidly-repainting console window recorded
+> **0/300 capture retries (ratio 0.000)** and 300/300 encoded — the retry ratio
+> tracks screen-content dynamics (WGC delivers frames only when content
+> changes), not a capture defect. `mask_sweep_{blackout,blur,mosaic}_20260723`:
+> startup panic mask, each mode masked **120/120 frames** through its distinct
+> GPU path (`d3d11-bgra-clearview` / `d3d11-bgra-blur-shader` /
+> `d3d11-bgra-mosaic-shader`); muxed eyeball artifacts in
+> `output/mask_sweep_<mode>.mp4`; CPU-dispatch `mask_ms` avg ≤ 0.016 ms, max
+> 0.039 ms (GPU-completion timing remains unmeasured).
+> `line_window_mask_live_20260723`: a real installed LINE desktop client window
+> was masked by `notification-producer` on **199/200 frames** (frame 1 precedes
+> the first 5-frame window poll) — the first canonical live application
+> artifact beyond the Teams alias fixture. `srt_loopback_refresh_20260723`: a
+> local FFmpeg client joined mid-stream and decoded **90 frames**; sender
+> summary `connections=1 sent=160 enqueued=600 dropped_queue_full=0
+> dropped_awaiting_keyframe=13`; the listener returned to listen mode after the
+> client closed. `scene_classifier_onnx_20260723`: DirectML provider loaded
+> `models/scene_classifier_v1.onnx`; p95 inference **13.235 ms**, 0 failures,
+> all four classifier gates passed; the class distribution on synthetic
+> console-motion content was code_text/mixed_ui and real-screen accuracy
+> remains unmeasured. The portable package was rebuilt from the same sha:
+> `output/AetherFlow-portable-20260723.zip` (44.8 MiB, SHA256 in
+> PROJECT_STATUS) passed its staged self-tests (300-frame staged run, SRT probe
+> decoded 30 frames, Studio `--ui-smoke` exit 0). No source files changed in
+> this refresh. Still open: human eyeball confirmation of the sweep/LINE mp4s,
+> real Slack/Discord/Telegram/WhatsApp artifacts, the broader password-control
+> matrix, Intel oneVPL hardware evidence (this host has no Intel GPU), package
+> signing, and the release decision.
+
 > **2026-07-15 — fresh-clone Windows bootstrap and public build SOP verified.**
 > `tools/bootstrap_windows.ps1` now provides the canonical PowerShell entrypoint
 > for Core or Studio source builds. The default Studio profile invokes the
