@@ -27,7 +27,18 @@ This file preserves dated verification and implementation evidence. It is histor
 > `line_window_mask_live_20260723`: a real installed LINE desktop client window
 > was masked by `notification-producer` on **199/200 frames** (frame 1 precedes
 > the first 5-frame window poll) — the first canonical live application
-> artifact beyond the Teams alias fixture. `srt_loopback_refresh_20260723`: a
+> artifact beyond the Teams alias fixture. Human review of the muxed output
+> then surfaced two nuances the automated gates did not: (1) **frame 0 was
+> encoded unmasked** — the window existed before the first background
+> window-poll snapshot was published, so the login QR and the account e-mail
+> field are fully legible for exactly one frame (~33 ms at 30 fps; the
+> worst-case exposure equals the 5-frame poll cadence, and on SRT those frames
+> leave the machine) — a fail-open startup gap that contradicts the fail-closed
+> intent; (2) in the masked steady state, OpenCV's QR detector could neither
+> locate nor decode the blurred login QR across seven enhancement variants
+> (upscale, unsharp, CLAHE, adaptive/Otsu threshold) — a single-frame,
+> standard-decoder result only; blur remains non-information-erasing, and
+> blackout stays the only zero-information mode for machine-readable content. `srt_loopback_refresh_20260723`: a
 > local FFmpeg client joined mid-stream and decoded **90 frames**; sender
 > summary `connections=1 sent=160 enqueued=600 dropped_queue_full=0
 > dropped_awaiting_keyframe=13`; the listener returned to listen mode after the
@@ -39,10 +50,11 @@ This file preserves dated verification and implementation evidence. It is histor
 > `output/AetherFlow-portable-20260723.zip` (44.8 MiB, SHA256 in
 > PROJECT_STATUS) passed its staged self-tests (300-frame staged run, SRT probe
 > decoded 30 frames, Studio `--ui-smoke` exit 0). No source files changed in
-> this refresh. Still open: human eyeball confirmation of the sweep/LINE mp4s,
-> real Slack/Discord/Telegram/WhatsApp artifacts, the broader password-control
-> matrix, Intel oneVPL hardware evidence (this host has no Intel GPU), package
-> signing, and the release decision.
+> this refresh. Still open: a fail-closed startup/appearance gate for the window
+> producer (the frame-0 exposure noted above), full human confirmation of the
+> sweep mp4s, real Slack/Discord/Telegram/WhatsApp artifacts, the broader
+> password-control matrix, Intel oneVPL hardware evidence (this host has no
+> Intel GPU), package signing, and the release decision.
 
 > **2026-07-15 — fresh-clone Windows bootstrap and public build SOP verified.**
 > `tools/bootstrap_windows.ps1` now provides the canonical PowerShell entrypoint
