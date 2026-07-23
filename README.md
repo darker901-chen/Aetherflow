@@ -1,67 +1,88 @@
 # AetherFlow
 
-**Author-directed, AI-assisted engineering of a native real-time media system.**
+**Fail-closed privacy masking for screen capture — passwords and private chat
+windows are masked on the GPU before the encoder ever sees the frame.**
 
-AetherFlow is a Windows-first portfolio project for GPU screen-media pipelines.
-It captures a display with Windows Graphics Capture or DXGI duplication, keeps
-frames on D3D11 surfaces through masking and color conversion, makes a
-scene-first frame decision, and encodes H.264 through a shared NVIDIA NVENC /
-Intel oneVPL abstraction. Deterministic privacy masks are applied before encode,
-optional SRT output carries the already-masked stream, and a separate local AI
-slow path can observe sampled frames without blocking or controlling the default
-media path. Its first product wedge is **Live Share Guard**: reducing accidental
-disclosure during screen sharing without adding a network or model dependency
-to the media fast path.
+[![build](https://github.com/darker901-chen/Aetherflow/actions/workflows/build.yml/badge.svg)](https://github.com/darker901-chen/Aetherflow/actions/workflows/build.yml)
+![platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-0078D6)
+![language](https://img.shields.io/badge/C%2B%2B-17-00599C)
+![encoders](https://img.shields.io/badge/encoders-NVENC%20%7C%20oneVPL%20%7C%20VideoToolbox-76B900)
+![license](https://img.shields.io/badge/license-MIT-green)
+![status](https://img.shields.io/badge/status-pre--release-orange)
 
-The project demonstrates:
-
-- native Windows capture and D3D11 texture ownership;
-- GPU-resident BGRA masking and BGRA-to-NV12 conversion;
-- asynchronous hardware-encoder submission, drain, and bitstream handling;
-- pre-encode, fail-closed privacy composition for password fields, selected
-  chat/application windows, manual regions, and panic masking;
-- optional video-only SRT/MPEG-TS output from encoded H.264 access units;
-- a macOS path using ScreenCaptureKit, CoreImage/Metal, VideoToolbox, and
-  AVAssetWriter; and
-- reproducible trace and verification artifacts for timing, decisions, masks,
-  capture behavior, and encode outcomes.
+One password field or one chat notification is all it takes for a screen share
+to leak something private. AetherFlow's first product wedge, **Live Share
+Guard**, removes those regions before they can leave the machine: it captures
+the display, decides what must be hidden using deterministic local rules,
+applies the mask while the frame is still a GPU texture, and only then hands
+the frame to the hardware encoder. If the mask cannot be applied, the frame is
+never encoded. No cloud service, no ML model, and no network call sits in that
+path.
 
 ![AetherFlow Studio settings for deterministic privacy masks and SRT streaming](docs/assets/aetherflow-studio-ui.png)
 
 *AetherFlow Studio controls the same native pipeline: deterministic UI
 Automation password-field and recognized messenger-window masks run before
-encode; SRT receives the masked output. The ONNX classifier is optional,
-off-thread, and advisory.*
+encode; SRT receives only the already-masked stream. The ONNX classifier is
+optional, off-thread, and advisory.*
 
-## Architecture in Brief
+## How a Frame Flows
 
-```text
-Fast path (per frame, deterministic)
-WGC / DXGI -> D3D11 BGRA -> decide -> privacy mask -> NV12 -> NVENC / oneVPL
-                                                           -> optional SRT
-                                                           -> frame trace
-
-Slow path (sampled, droppable, advisory)
-sampled pixels -> local ONNX analyzer -> cached scene proposal -> status / trace
+```mermaid
+flowchart LR
+    subgraph fast["Fast path — every frame, deterministic"]
+        A["Capture<br/>WGC / DXGI"] --> B["D3D11 BGRA<br/>GPU-resident"]
+        B --> C["Scene<br/>decision"]
+        C --> D["Privacy mask<br/>blur / mosaic / blackout"]
+        D --> E["BGRA to NV12"]
+        E --> F["H.264 encode<br/>NVENC / oneVPL"]
+        F --> G["MP4 / SRT<br/>frame trace"]
+    end
+    subgraph slow["Slow path — sampled, advisory, droppable"]
+        H["Sampled pixels"] --> I["Local ONNX<br/>~1 Hz, off-thread"]
+        I --> J["Cached scene<br/>proposal"]
+    end
+    J -. "status and telemetry only — never blocks or steers encode" .-> C
 ```
 
-The fast path does not wait for a model, cloud service, or LLM. Deterministic
-producers decide privacy regions from local state, and the compositor transforms
-those pixels before the encoder sees them. On Windows, a non-blackout mask
-failure falls back to blackout; if the fail-closed path cannot complete, the run
-aborts instead of silently encoding the original frame. macOS currently skips a
-frame after an ultimate mask failure, so cross-platform failure semantics are
-not yet identical.
+The fast path never waits for a model, a network service, or an LLM.
+Deterministic producers find password fields (UI Automation `IsPassword`),
+recognized messenger windows (LINE, Slack, Discord, Teams, Telegram, WhatsApp),
+manual regions, and panic state; the compositor transforms those pixels before
+the encoder sees them. On Windows a failed non-blackout effect falls back to
+blackout, and if even that cannot complete the run aborts instead of silently
+encoding the original frame. macOS currently skips the frame after an ultimate
+mask failure, so cross-platform failure semantics are not yet identical.
 
 The optional ONNX classifier runs at roughly 1 Hz on its own worker path. Its
 result is cached for policy telemetry and Studio status; it does not steer
-NVENC, oneVPL, or VideoToolbox. An explicit opt-in demo can map stable classes to
-a full-screen visual effect, but that demo is not product privacy behavior.
+NVENC, oneVPL, or VideoToolbox. An explicit opt-in demo can map stable classes
+to a full-screen visual effect, but that demo is not product privacy behavior.
 
 See [the product architecture](docs/3-product/ARCHITECTURE.md) for pipeline
 stages, ownership boundaries, module ordering, and backend details.
 
-## Evidence and Current Boundaries
+## Engineering Highlights
+
+- **Fail-closed by construction.** Mask failures escalate effect → blackout →
+  abort (Windows) or frame skip (macOS); an unmasked frame is never encoded.
+- **GPU-resident fast path.** Capture, BGRA masking, BGRA-to-NV12 conversion,
+  and encode submission all operate on D3D11 textures — no per-frame CPU
+  round-trip.
+- **Determinism outranks AI.** Safety decisions come from local deterministic
+  producers. The optional ONNX classifier is advisory-only, runs off the frame
+  path, and can be dropped without weakening masking.
+- **One encoder boundary, two vendors.** A shared `IH264Encoder` abstraction
+  drives NVIDIA NVENC and Intel oneVPL with encoder-owned surfaces and
+  asynchronous drain; the same H.264 access units feed MP4 and optional
+  video-only SRT/MPEG-TS output.
+- **A second native stack on macOS.** ScreenCaptureKit, CoreImage/Metal,
+  VideoToolbox, and AVAssetWriter behind platform-specific boundaries.
+- **Evidence-driven verification.** Every run emits frame-level traces and
+  machine-checked reports for timing, decisions, masks, capture behavior, and
+  encode outcomes — not screenshots alone.
+
+## Measured Results
 
 These are point-in-time results from named runs, not universal performance or
 coverage claims. Re-run the repository gates before quoting them as current.
@@ -74,30 +95,6 @@ coverage claims. Re-run the repository gates before quoting them as current.
 | ONNX scene inference, `scene_classifier_onnx_smoke` | p95 **15.254 ms** off-thread | Proves runtime plumbing and timing, not real-screen classification accuracy. |
 | SRT loopback, `srt_output_v1` | **90 frames decoded** by a local FFmpeg client | NVENC, local loopback, video-only, single viewer; Intel hardware and real LAN/loss conditions remain unverified. |
 | macOS mask stage, `mac_chat_window_mosaic_masked` | mean **5.40 ms**, p99 **7.14 ms** with 11 rectangles/frame | Historical run; `mask_ms` is CPU-side dispatch timing, not GPU-completion timing, and the current tree was not rerun on this Windows host. |
-
-The current release boundary is deliberately narrow:
-
-- This is a pre-release source snapshot and local pre-encode masking prototype,
-  not a certified DLP product. It does not claim to detect every sensitive
-  surface, application, notification, browser field, or custom control.
-- The NVIDIA path is locally verified. The Intel oneVPL backend is implemented
-  and build-covered, but a current supported Intel-hardware artifact is missing.
-- The macOS ScreenCaptureKit / VideoToolbox path and chat-window masking have
-  dated verification, but were not rerun on the current Windows host;
-  secure-text detection remains a stub and ROI/QP is unsupported.
-- The classifier is optional and advisory; real-screen accuracy is unmeasured.
-- Blackout, blur, and mosaic are implemented product modes, but a current full
-  visual sweep is still missing.
-- No formal version, Git tag, or GitHub Release is claimed. The last portable
-  zip predates the current hardened tree, is unsigned, and is not a current
-  release artifact.
-- A successful build does not prove encoder hardware/driver availability, live
-  application coverage, long-duration reliability, or field-ready SRT behavior.
-
-Raw `.aetherflow/runs/` bundles are intentionally gitignored because traces and
-recordings may contain captured-screen-sensitive data. Public claim boundaries
-and dated evidence remain in [Project Status](docs/1-status/PROJECT_STATUS.md)
-and [Verification History](docs/4-qa-debugging/VERIFICATION_HISTORY.md).
 
 ## Quick Start on Windows
 
@@ -126,6 +123,32 @@ criteria, and common failures, use
 environment variables, output paths, SRT setup, verification commands, portable
 packaging, and macOS operation, use the
 [Operation Guide](docs/OPERATION_GUIDE.md).
+
+## Current Boundaries
+
+The current release boundary is deliberately narrow:
+
+- This is a pre-release source snapshot and local pre-encode masking prototype,
+  not a certified DLP product. It does not claim to detect every sensitive
+  surface, application, notification, browser field, or custom control.
+- The NVIDIA path is locally verified. The Intel oneVPL backend is implemented
+  and build-covered, but a current supported Intel-hardware artifact is missing.
+- The macOS ScreenCaptureKit / VideoToolbox path and chat-window masking have
+  dated verification, but were not rerun on the current Windows host;
+  secure-text detection remains a stub and ROI/QP is unsupported.
+- The classifier is optional and advisory; real-screen accuracy is unmeasured.
+- Blackout, blur, and mosaic are implemented product modes, but a current full
+  visual sweep is still missing.
+- No formal version, Git tag, or GitHub Release is claimed. The last portable
+  zip predates the current hardened tree, is unsigned, and is not a current
+  release artifact.
+- A successful build does not prove encoder hardware/driver availability, live
+  application coverage, long-duration reliability, or field-ready SRT behavior.
+
+Raw `.aetherflow/runs/` bundles are intentionally gitignored because traces and
+recordings may contain captured-screen-sensitive data. Public claim boundaries
+and dated evidence remain in [Project Status](docs/1-status/PROJECT_STATUS.md)
+and [Verification History](docs/4-qa-debugging/VERIFICATION_HISTORY.md).
 
 ## Development Provenance
 
